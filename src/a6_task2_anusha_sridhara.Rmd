@@ -1,0 +1,116 @@
+---
+title: "A study of influences on charitable giving for conservation of forests (Aug 2017)"
+author: "Anusha Sridhara"
+date: "11/24/2021"
+output: html_document
+---
+
+## Introduction
+
+Batavia and Chelsea (2017) from Andrews Forest LTER Site, conducted an online survey, where 1331 participants across United States responded to questionnaires about social desirability, moral inclusivity and donation set-up. The survey asked respondents to indicate their political willingness and whether they consider themselves as an environmentalist or otherwise. This report analyzes likelihood of association between people's political affiliation and their willingness to donate for conservation of forests with the help of a non-parametric test, Pearson's Chi-Squared test.
+
+## Data Analysis
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message = FALSE)
+#Attaching the packages
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom)
+library(dplyr)
+library(kableExtra)
+```
+
+```{r, include=FALSE}
+#Reading in the data
+survey <- read_csv(here("data", "conservation_survey.csv")) 
+```
+
+```{r, include=FALSE}
+#cleaning up column names
+survey_clean <- clean_names(survey)
+```
+
+```{r, include=FALSE}
+#Creating a subset with only data from political affiliation and environmentalist
+paff_envt <- survey_clean %>% 
+  select(env_id, pol_or)
+```
+
+```{r, include=FALSE}
+#Simplifying data frame with specified political affiliation and if respondents are environmentalists or not
+paff_envt1 <- paff_envt %>% 
+  mutate(political_affiliation = case_when(
+    pol_or %in% c(1,2,3) ~ "conservative",
+    pol_or %in% c(5,6,7) ~ "liberal")) %>% 
+  drop_na() %>% 
+  mutate(environmentalist = case_when(
+    env_id %in% c(1) ~ "yes",
+    env_id %in% c(2) ~ "no",
+    env_id %in% c(3) ~ "unsure"
+  ))
+```
+
+
+```{r, include=FALSE}
+#Calculating total counts by political affiliation and environmentalist
+paff_envt2 <- paff_envt1 %>% 
+  count(political_affiliation, environmentalist)
+
+#Presenting the counts in tidy format
+paff_envt_counts <- paff_envt1 %>% 
+  janitor::tabyl(political_affiliation, environmentalist)
+
+paff_envt_counts
+```
+
+
+```{r, include=TRUE}
+#Calculating proportions by row
+pol_aff_proportions <- paff_envt_counts %>% 
+  janitor::adorn_percentages() %>% 
+  janitor::adorn_pct_formatting(digits=2) %>% 
+  janitor::adorn_ns() %>% 
+  kable(caption = "*Table 1: Total survey counts and proportions of responses identifying self as environmentalist by political affiliation*") %>% 
+  kable_styling(bootstrap_options = "striped", full_width = TRUE)
+
+pol_aff_proportions
+```
+
+```{r, include=FALSE}
+#Converting to a contingency table - column to row names
+pol_aff_ct <- paff_envt_counts %>% 
+  column_to_rownames(var = "political_affiliation") %>% 
+  kable(caption = "Table 1: Total counts of survey responses identifying self as environmentalist by political affiliation") %>% 
+  kable_styling(bootstrap_options = "striped", full_width = TRUE)
+pol_aff_ct
+```
+
+```{r, include=FALSE}
+#Performing Chi-Square test to assess the association between political affiliation and considering self as an environmentalist
+pol_aff_cst <- chisq.test(paff_envt_counts)
+pol_aff_cst
+```
+
+```{r, include=FALSE}
+pol_aff_cst_tidy <- broom::tidy(pol_aff_cst)
+pol_aff_cst_tidy
+```
+
+## Pearson's Chi-Squared Test Interpretation
+
+A Pearson's Chi-squared test was performed on the data recorded of the 1331 respondents. The results have revealed that there is no significant association between one's political affiliation (whether one identifies self as a liberal or a conservative) and likelihood of identifying themselves as an environmentalist or otherwise ($\chi$^2^(`r pol_aff_cst_tidy$parameter`) = `r round( pol_aff_cst_tidy$statistic, 2)`, *p* = `r pol_aff_cst_tidy$p.value`. The results could therefore also help in predicting whether a person's political affiliation and their tendency to identify as an environmentalist or not, would in turn have an effect on their likelihood of making charitable contributions towards conservation of forests. In other words, political affiliation of a person does not affect their likelihood to make charity towards conservation of forests.
+
+
+## Data Citation
+Batavia, C. 2019. Influences on charitable giving for conservation: Online survey data of 1,331 respondents across the US, August 2017 ver 3. Environmental Data Initiative. https://doi.org/10.6073/pasta/926e6270e324a1322a900da14d38b96c (Accessed 2021-11-28).
+
+
+
+
+
+
+
+
+
+
