@@ -1,0 +1,151 @@
+---
+title: "Comparitive study on mean lengths of two different female lizard species at the Jornada Basin LTER "
+author: "Anusha Sridhara"
+date: "11/26/2021"
+output: html_document
+---
+
+## Introduction
+
+The following report discusses characteristics of two female lizard species of the Jornada Basin Long-Term Experimental Forest, namely the Desert Grassland lizard(*Cnemidophorus uniparens - CNUN*) and the Colorado Checkered lizard (*Cnemidophorus tessalatus - CNTE*). The data for the study has been drawn from Lizard pitfall trap data (LTER-II & LTER-III), ver 36, collected by Lightfoot.D (2017). The total lengths of the female lizard species, which is of interest in this report, have been analysed using descriptive statistics to summarize their characteristics (total number, mean, sd ). Parametric methods such as unpaired t test and cohen's d test have also been employed to analyze possible significant differences in the mean lengths between the two species.
+
+## Data Visualization
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+#Attaching the packages
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom)
+library(dplyr)
+library(kableExtra)
+library(effsize)
+```
+
+```{r, include=FALSE}
+#Reading in the data
+lizards <- read_csv(here("data", "lizards.csv")) 
+```
+
+```{r, include=FALSE}
+#Creating a subset with only variables spp, sex and total_length
+lizards1 <- lizards %>% 
+  select(spp, sex, total_length) %>% 
+  filter(sex=="F") %>% 
+  filter(spp %in% c("CNUN", "CNTE"))
+```
+
+```{r}
+ggplot(data=lizards1, aes(x=total_length))+
+  geom_histogram(fill= "aquamarine",
+                 color = "black",)+
+  facet_wrap(~spp)+
+  theme_gray()+
+  labs (x= "Total Length (mm)",
+        y = "Frequency",
+        title = "Total length of female lizards(mm) by species in Jornada Basin LTER ",
+        caption = expression(
+          paste(
+            bold("Figure 1: Female Lizard lengths; Comparison of Female Lizards lengths (in mm) of 
+                 species CNUN and CNTE using Jornada Basin LTER lizards database"))))+
+  theme(plot.caption = element_text(hjust = 0.5))
+```
+
+## Data Summary 
+```{r, include=FALSE}
+lizards_length_comparison <- lizards1 %>% 
+  group_by(spp) %>% 
+  summarize(mean_length = round(mean(total_length, na.rm = TRUE),2),
+            sd_length = round(sd(total_length, na.rm = TRUE),2),
+            sample_size = n())
+
+lizards_length_comparison
+```
+
+```{r}
+lizards_length_comparison1 <- lizards_length_comparison %>% 
+  kable(col.names = c("Species",
+                      "Mean length of female lizards in mm",
+                      "Standard Deviation of female lizards in mm",
+                      "Total number of Female Lizards"),
+                       caption = "*Table 1: Descriptive statistics (mean, standard deviation, and sample size) of the two female lizard species in Jornada Basin LTER*") %>% 
+  kable_styling(bootstrap_options = "striped", full_width = TRUE)
+
+lizards_length_comparison1
+```
+
+```{r, include=FALSE}
+# Exploring assumptions for T test through exploratory graphs
+ggplot(data = lizards1, aes(x=total_length))+
+  geom_histogram()+
+  facet_wrap(~spp)
+```
+
+```{r, include=FALSE}
+# # Exploring assumptions for T test through exploratory graphs
+ggplot(data = lizards1, aes(sample=total_length)) +
+  geom_qq()+
+  geom_qq_line() +
+  facet_wrap(~spp)
+```
+
+```{r, include=FALSE}
+# T-test code: 
+
+# Pull vectors of lizard lengths for the two female species 
+
+length_female_cnte <- lizards1 %>% 
+  filter(spp == "CNTE") %>% 
+  pull(total_length)
+
+length_female_cnun <- lizards1 %>% 
+  filter(spp == "CNUN") %>% 
+  drop_na(total_length) %>% 
+  pull(total_length)
+
+# Plot histograms & qq-plots to check assumptions
+hist(length_female_cnte) # Looks kind of normal
+qqnorm(length_female_cnte) # Relatively linear
+hist(length_female_cnun) # Looks normal 
+qqnorm(length_female_cnun) # Looks very linear
+
+# Overall: assumptions of normality hold, & sample size additionally >> Central Limit Theorem (means will be normally distributed). Two-sample t-test OK for means comparison! 
+
+# Run the t-test:
+t.test_female_lizards_length <- t.test(length_female_cnte,length_female_cnun)
+t.test_female_lizards_length
+
+# Get the tidy model results to call outputs in-line: 
+t.test_female_lizards_length2 <- tidy(t.test_female_lizards_length)
+t.test_female_lizards_length2
+
+# Get the means & SDs for each: 
+mean_female_length_cnte <- mean(length_female_cnte)
+mean_female_length_cnun <- mean(length_female_cnun)
+sd_female_length_cnte <- sd(length_female_cnte)
+sd_female_length_cnun <- sd(length_female_cnun)
+```
+
+```{r, include=FALSE}
+# Assessing effect size through Cohen's d 
+female_length_cohen <- cohen.d(length_female_cnte,length_female_cnun)
+female_length_cohen
+```
+
+## Data Interpretation
+
+a) The mean length of CNTE female lizard (`r lizards_length_comparison$mean_length[1]` $\pm$ `r lizards_length_comparison$sd_length[1]` mm, *n* = `r lizards_length_comparison$sample_size[1]`) is greater than CNUN female lizards  (`r lizards_length_comparison$mean_length[2]` $\pm$ `r lizards_length_comparison$sd_length[2]` mm, *n* = `r lizards_length_comparison$sample_size[2]`) by 97.29 mm. 
+b) The unpaired two sample t-test resulted in a p value of `r t.test_female_lizards_length2$p.value`. This can further be interpreted as, if the above samples were drawn from the populations with same mean, the probability of taking two random samples with means *at least as different* as the sample means we found by random chance (taking into account spread, n) is 3.746. We therefore have sufficient evidence to not retain the null hypothesis. There is significant difference in mean length between the two groups/ species of female lizards (Welch's two-sample t-test: t(`r round(t.test_female_lizards_length2$parameter,2)` = `r round(t.test_female_lizards_length2$statistic,2)`, p < 0.001)
+C) Cohen's d value of `r female_length_cohen$estimate` indicates that the effect was large. 
+
+
+## Data Citation
+
+Lightfoot, D. 2017. Lizard pitfall trap data (LTER-II, LTER-III) ver 36. Environmental Data Initiative. https://doi.org/10.6073/pasta/ff37b4cace16a9943575f3fd7067064e (Accessed 2021-11-28).
+
+
+
+
+
+
