@@ -1,5 +1,5 @@
 ---
-title: "Comparitive study on mean lengths of two different female lizard species at the Jornada Basin LTER "
+title: "Comparitive study on mean lengths of two different female lizard species from Jornada Basin LTER "
 author: "Anusha Sridhara"
 date: "11/26/2021"
 output: html_document
@@ -30,13 +30,14 @@ lizards <- read_csv(here("data", "lizards.csv"))
 
 ```{r, include=FALSE}
 #Creating a subset with only variables spp, sex and total_length
-lizards1 <- lizards %>% 
-  select(spp, sex, total_length) %>% 
-  filter(sex=="F") %>% 
-  filter(spp %in% c("CNUN", "CNTE"))
+lizards1 <- lizards %>% # create file lizards1 from lizards
+  select(spp, sex, total_length) %>% # select columns spp, sex and total_length and
+  filter(sex=="F") %>% # filter to include only female data and
+  filter(spp %in% c("CNUN", "CNTE")) # filter to include only species CNUN and CNTE
 ```
 
 ```{r}
+# Data Visualization using histogram
 ggplot(data=lizards1, aes(x=total_length))+
   geom_histogram(fill= "aquamarine",
                  color = "black",)+
@@ -45,15 +46,17 @@ ggplot(data=lizards1, aes(x=total_length))+
   labs (x= "Total Length (mm)",
         y = "Frequency",
         title = "Total length of female lizards(mm) by species in Jornada Basin LTER ",
-        caption = expression(
-          paste(
-            bold("Figure 1: Female Lizard lengths; Comparison of Female Lizards lengths (in mm) of 
-                 species CNUN and CNTE using Jornada Basin LTER lizards database"))))+
-  theme(plot.caption = element_text(hjust = 0.5))
+        caption = "Figure 1: Female Lizard lengths; Comparison of Female Lizards lengths (in mm) of 
+                 species CNUN and CNTE using Jornada Basin LTER lizards database")+
+  theme(plot.caption = element_text(hjust = 0.5),
+        axis.title.x = element_text(face = "bold"),
+        axis.title.y = element_text(face = "bold"))
+
 ```
 
 ## Data Summary 
 ```{r, include=FALSE}
+# Summarizing the data using descriptive statistics
 lizards_length_comparison <- lizards1 %>% 
   group_by(spp) %>% 
   summarize(mean_length = round(mean(total_length, na.rm = TRUE),2),
@@ -64,6 +67,7 @@ lizards_length_comparison
 ```
 
 ```{r}
+# Presenting the data summary in a tidy format using Kable styling
 lizards_length_comparison1 <- lizards_length_comparison %>% 
   kable(col.names = c("Species",
                       "Mean length of female lizards in mm",

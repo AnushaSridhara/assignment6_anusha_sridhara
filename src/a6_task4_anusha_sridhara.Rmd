@@ -1,0 +1,88 @@
+---
+title: "History of changes in Mono Lake Levels from 1850 to 2017"
+author: "Anusha Sridhara"
+date: "11/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+#Attaching the packages
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom)
+library(dplyr)
+library(effsize)
+library(scales)
+```
+
+```{r, include=FALSE}
+#Reading in the data
+mono_lake <- read_csv(here("data", "mono_lake_annual_levels.csv"), skip=5) # read in the data and skip the first 5 rows from the data
+```
+
+```{r, include=FALSE}
+# Cleaning the dataset by renaming the column heading
+mono_lake_clean <- mono_lake %>% 
+  rename(year = `Year`) %>% 
+  rename(lake_level_ft_above_sea_level = 'lake level (feet above sea level)') %>% 
+  rename(stable_level_ft = 'stable level') %>% 
+  rename(volume_acre_feet = 'Volume (acre-feet)') %>% 
+  rename(surface_acre = 'Surface Area (acres') %>% 
+  rename(vertical_change = 'vertical change')
+```
+
+```{r, include=FALSE}
+# Converting columns to be recognized as numerics rather than characters
+mono_lake_clean1 <- mono_lake_clean%>% 
+  mutate (year = as.numeric(year)) %>% 
+  mutate (lake_level_ft_above_sea_level = as.numeric(lake_level_ft_above_sea_level))%>% 
+  mutate (stable_level_ft = as.numeric(stable_level_ft))
+```
+
+```{r}
+# Plotting of graph to depict levels of Mono lake across years and annotating with important milestones
+ggplot(data = mono_lake_clean1, aes(x=year, y=lake_level_ft_above_sea_level ))+
+  geom_ribbon(data = mono_lake_clean1 %>% 
+                filter(lake_level_ft_above_sea_level <= 6392), aes(ymin = lake_level_ft_above_sea_level, ymax = 6392), fill = "tomato4")+
+  geom_line()+
+  scale_x_continuous(breaks = seq(from = 1850, to = 2020, by = 20))+
+  geom_hline(yintercept = 6377, color = "black", linetype = "twodash")+
+  annotate("text", x= 1880, y=6379, label = "Emergence of land bridges (6377 ft)", color = "blue4")+
+  geom_hline(yintercept = 6392, label= "darkturquoise")+
+  annotate("text", x=1865, y=6394, label = "Stable level (6392 ft)", color= "brown4")+
+  geom_hline(yintercept = 6350, color = "seagreen")+
+  annotate("text", x=1875, y=6352, label = "Salinity>150g/L(6350 ft) - Acute food resources", color = "hotpink4", hjust=0)+
+  geom_hline(yintercept = 6360, color = "darkturquoise")+
+  annotate("text", x=1875, y=6362, label = "Salinity>120g/L(6360 ft) - Reduced food resources", color = "darkgoldenrod4", hjust=0)+
+  theme_light()+
+  theme_classic()+
+  theme(panel.background = element_rect(fill = "antiquewhite1", color = "coral1"))+
+  theme(plot.background = element_rect(fill = "grey"))+
+  theme(plot.caption = element_text(hjust = 0.5))+
+  theme(plot.title = element_text(face = "bold"))+
+  theme(axis.title.x = element_text(face = "bold"))+
+  theme(axis.title.y = element_text(face = "bold"))+
+  labs(x= "Years", y = "Lake Level (feet above sea level", 
+       title = "Mono Lake levels history",
+       subtitle = "Change in lake levels (in feet above sea levels) across years 1850 to 2017",
+       caption = "Figure 1: Changes in lake levels across years, especially after diversion of water by LADWP 
+       are denoted. Levels at which land bridge emerge which affects major bird nesting sites and
+       critical levels food availability (brine shrimp & brine flies) which affects aquatic birds 
+       (eared grebes & california gulls) are also indicated")+
+  annotate("segment",
+           x = 1946, xend = 1941,
+           y = 6426, yend = 6418.5,
+           arrow = arrow(length = unit(2.0, "mm")),
+           colour = "cadetblue",
+           size = 0.3)+
+  annotate("text", x= 1968, y=6426, size=3, label= "LADWP begins diverting water 
+           from Mono Lake's tributary streams", color = "darkblue")
+```
+
+
+
+
+
+

@@ -27,37 +27,37 @@ survey <- read_csv(here("data", "conservation_survey.csv"))
 ```
 
 ```{r, include=FALSE}
-#cleaning up column names
+#cleaning up column headings
 survey_clean <- clean_names(survey)
 ```
 
 ```{r, include=FALSE}
 #Creating a subset with only data from political affiliation and environmentalist
-paff_envt <- survey_clean %>% 
-  select(env_id, pol_or)
+paff_envt <- survey_clean %>% # create new file paff_envt from data survey_clean and
+  select(env_id, pol_or) # include only columns env_id and pol_or
 ```
 
 ```{r, include=FALSE}
 #Simplifying data frame with specified political affiliation and if respondents are environmentalists or not
-paff_envt1 <- paff_envt %>% 
+paff_envt1 <- paff_envt %>%  # Create new file paff_envt1 from paff_envt and add new columns simplifying data using mutate 
   mutate(political_affiliation = case_when(
-    pol_or %in% c(1,2,3) ~ "conservative",
-    pol_or %in% c(5,6,7) ~ "liberal")) %>% 
+    pol_or %in% c(1,2,3) ~ "Conservative",
+    pol_or %in% c(5,6,7) ~ "Liberal")) %>% 
   drop_na() %>% 
   mutate(environmentalist = case_when(
-    env_id %in% c(1) ~ "yes",
-    env_id %in% c(2) ~ "no",
-    env_id %in% c(3) ~ "unsure"
-  ))
+    env_id %in% c(1) ~ "Yes",
+    env_id %in% c(2) ~ "No",
+    env_id %in% c(3) ~ "Unsure"
+  )) # renamed values of political affiliation and environmentalism 
 ```
 
 
 ```{r, include=FALSE}
 #Calculating total counts by political affiliation and environmentalist
-paff_envt2 <- paff_envt1 %>% 
-  count(political_affiliation, environmentalist)
+paff_envt2 <- paff_envt1 %>% # Create file paff_envt2 from paff_envt1
+  count(political_affiliation, environmentalist) # and count the number of responses
 
-#Presenting the counts in tidy format
+#Presenting the counts in tidy format using janitor::tabyl
 paff_envt_counts <- paff_envt1 %>% 
   janitor::tabyl(political_affiliation, environmentalist)
 
@@ -93,13 +93,14 @@ pol_aff_cst
 ```
 
 ```{r, include=FALSE}
+# Creating a tidy version of the contingency table 
 pol_aff_cst_tidy <- broom::tidy(pol_aff_cst)
 pol_aff_cst_tidy
 ```
 
 ## Pearson's Chi-Squared Test Interpretation
 
-A Pearson's Chi-squared test was performed on the data recorded of the 1331 respondents. The results have revealed that there is a significant association between one's political affiliation (whether one identifies self as a liberal or a conservative) and likelihood of identifying themselves as an environmentalist or otherwise ($\chi$^2^(`r pol_aff_cst_tidy$parameter`) = `r round( pol_aff_cst_tidy$statistic, 2)`, *p* = `r pol_aff_cst_tidy$p.value`. The results could therefore also help in predicting whether a person's political affiliation and their tendency to identify as an environmentalist or not, would in turn have an effect on their likelihood of making charitable contributions towards conservation of forests. In other words, political affiliation of a person does affect their likelihood to make charity towards conservation of forests.
+A Pearson's Chi-squared test was performed on data of 1331 respondents. The results have revealed that there is a significant association between one's political affiliation (whether one identifies self as a liberal or a conservative) and likelihood of identifying themselves as an environmentalist or otherwise ($\chi$^2^(`r pol_aff_cst_tidy$parameter`) = `r round( pol_aff_cst_tidy$statistic, 2)`, *p* = `r pol_aff_cst_tidy$p.value`. The results could therefore also help in predicting whether a person's political affiliation and their tendency to identify as an environmentalist or not, would in turn have an effect on their likelihood of making charitable contributions towards conservation of forests. In other words, political affiliation of a person does affect their likelihood to make charity towards conservation of forests.
 
 
 ## Data Citation
